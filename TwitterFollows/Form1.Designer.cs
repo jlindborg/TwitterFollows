@@ -40,7 +40,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(76, 107);
+            this.label1.Location = new System.Drawing.Point(41, 15);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(46, 13);
             this.label1.TabIndex = 0;
@@ -48,7 +48,7 @@
             // 
             // buttonFetchFriends
             // 
-            this.buttonFetchFriends.Location = new System.Drawing.Point(242, 222);
+            this.buttonFetchFriends.Location = new System.Drawing.Point(93, 78);
             this.buttonFetchFriends.Name = "buttonFetchFriends";
             this.buttonFetchFriends.Size = new System.Drawing.Size(95, 27);
             this.buttonFetchFriends.TabIndex = 1;
@@ -58,14 +58,14 @@
             // 
             // textBoxUserName
             // 
-            this.textBoxUserName.Location = new System.Drawing.Point(128, 104);
+            this.textBoxUserName.Location = new System.Drawing.Point(93, 12);
             this.textBoxUserName.Name = "textBoxUserName";
             this.textBoxUserName.Size = new System.Drawing.Size(209, 20);
             this.textBoxUserName.TabIndex = 2;
             // 
             // buttonFetchFollowers
             // 
-            this.buttonFetchFollowers.Location = new System.Drawing.Point(343, 222);
+            this.buttonFetchFollowers.Location = new System.Drawing.Point(206, 78);
             this.buttonFetchFollowers.Name = "buttonFetchFollowers";
             this.buttonFetchFollowers.Size = new System.Drawing.Size(96, 27);
             this.buttonFetchFollowers.TabIndex = 3;
@@ -75,7 +75,7 @@
             // 
             // textBoxOutputFolder
             // 
-            this.textBoxOutputFolder.Location = new System.Drawing.Point(128, 176);
+            this.textBoxOutputFolder.Location = new System.Drawing.Point(93, 38);
             this.textBoxOutputFolder.Name = "textBoxOutputFolder";
             this.textBoxOutputFolder.ReadOnly = true;
             this.textBoxOutputFolder.Size = new System.Drawing.Size(209, 20);
@@ -84,7 +84,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(48, 179);
+            this.label2.Location = new System.Drawing.Point(13, 41);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(74, 13);
             this.label2.TabIndex = 5;
@@ -92,7 +92,7 @@
             // 
             // buttonBrowse
             // 
-            this.buttonBrowse.Location = new System.Drawing.Point(343, 175);
+            this.buttonBrowse.Location = new System.Drawing.Point(308, 41);
             this.buttonBrowse.Name = "buttonBrowse";
             this.buttonBrowse.Size = new System.Drawing.Size(62, 20);
             this.buttonBrowse.TabIndex = 6;
@@ -104,7 +104,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(418, 128);
             this.Controls.Add(this.buttonBrowse);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textBoxOutputFolder);
