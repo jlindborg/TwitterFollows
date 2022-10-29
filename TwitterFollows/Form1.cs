@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using Tweetinvi.Models;
-using Tweetinvi;
 using System.IO;
 using System.Net;
 using Newtonsoft.Json;
-using Tweetinvi.Core.Extensions;
+
 
 namespace TwitterFollows
 {
@@ -19,15 +17,7 @@ namespace TwitterFollows
         public Form1()
         {
             InitializeComponent();
-
-            var consumerOnlyCredentials = new ConsumerOnlyCredentials("ydhwCu40L5Is2hV3sIfXKBZbp", "J0F1KENeeEqfxO0B2WbWdXrUi4hfjvRTJcRNTpcssD96FTY6Y5");
-            var appClientWithoutBearer = new TwitterClient(consumerOnlyCredentials);
-
-            bearerToken = appClientWithoutBearer.Auth.CreateBearerTokenAsync().Result;
-            var appCredentials = new ConsumerOnlyCredentials("ydhwCu40L5Is2hV3sIfXKBZbp", "J0F1KENeeEqfxO0B2WbWdXrUi4hfjvRTJcRNTpcssD96FTY6Y5")
-            {
-                BearerToken = bearerToken
-            };
+            GetBearerToken();
         }
 
         private void buttonFetchFriends_Click(object sender, EventArgs e)
@@ -39,6 +29,8 @@ namespace TwitterFollows
             {
                 DumpToCsv(textBoxUserName.Text + "_Following.csv",Following);
             }
+            MessageBox.Show(Following.Count.ToString() + " users are being followed by this account");
+            System.Diagnostics.Process.Start("explorer.exe", textBoxOutputFolder.Text);
         }
 
         private void DumpToCsv(string strFileName, List<UserInfo> dataSet)
@@ -59,20 +51,21 @@ namespace TwitterFollows
 
         private void FetchFriends()
         {
-            if (textBoxUserName.Text.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(textBoxUserName.Text))
             {
                 MessageBox.Show("You must enter a user name to search for");
                 return;
             }
             string id= GetIdFromUserName(textBoxUserName.Text);
-            if (id.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(id))
             {
+                MessageBox.Show("No user with that Id found");
                 return;
             }
 
             string strNextPageToken=GetNextPageOfFriends(id,"");
 
-            while (!strNextPageToken.IsNullOrEmpty())
+            while (!string.IsNullOrEmpty(strNextPageToken))
             {
                 strNextPageToken = GetNextPageOfFriends(id, strNextPageToken);
             }
@@ -109,7 +102,7 @@ namespace TwitterFollows
         {
             var url = "https://api.twitter.com/2/users/" + userId + "/following";
 
-            if (!nextPageId.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(nextPageId))
             {
                 url=url+ "?pagination_token=" + nextPageId;
             }
@@ -128,7 +121,7 @@ namespace TwitterFollows
 
             List<UserInfo> userInfos = new List<UserInfo>();
             var output = JsonConvert.DeserializeObject<Root>(result);
-
+            if (output==null || output.data==null) return "";
             foreach (UserInfo userInfo in output.data)
             {
                 Following.Add(userInfo);
@@ -141,7 +134,7 @@ namespace TwitterFollows
         {
             var url = "https://api.twitter.com/2/users/" + userId + "/followers";
 
-            if (!nextPageId.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(nextPageId))
             {
                 url = url + "?pagination_token=" + nextPageId;
             }
@@ -160,7 +153,7 @@ namespace TwitterFollows
 
             List<UserInfo> userInfos = new List<UserInfo>();
             var output = JsonConvert.DeserializeObject<Root>(result);
-
+            if (output==null || output.data==null) return "";
             foreach (UserInfo userInfo in output.data)
             {
                 Followers.Add(userInfo);
@@ -182,25 +175,60 @@ namespace TwitterFollows
 
         private void buttonFetchFollowers_Click(object sender, EventArgs e)
         {
-            if (textBoxUserName.Text.IsNullOrEmpty())
+            Followers = new List<UserInfo>();
+            if (string.IsNullOrEmpty(textBoxUserName.Text))
             {
                 MessageBox.Show("You must enter a user name to search for");
                 return;
             }
             string id = GetIdFromUserName(textBoxUserName.Text);
-            if (id.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(id))
             {
+                MessageBox.Show("No user with that Id found");
                 return;
             }
 
             string strNextPageToken = GetNextPageOfFollowers(id, "");
 
-            while (!strNextPageToken.IsNullOrEmpty())
+            while (!string.IsNullOrEmpty(strNextPageToken))
             {
                 strNextPageToken = GetNextPageOfFollowers(id, strNextPageToken);
             }
-
-            DumpToCsv(textBoxUserName.Text + "_Followers.csv",Followers);
+            if (Followers.Count > 0) { 
+                DumpToCsv(textBoxUserName.Text + "_Followers.csv",Followers);
+            }
+            MessageBox.Show(Followers.Count.ToString() + " followers of this account found");
+            System.Diagnostics.Process.Start("explorer.exe", textBoxOutputFolder.Text);
         }
+
+        private void GetBearerToken()
+        {
+            var url = "https://api.twitter.com/oauth2/token";
+
+            var httpRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpRequest.Method = "POST";
+
+            httpRequest.ContentType = "application/x-www-form-urlencoded";
+            httpRequest.Headers["Authorization"] = "Basic eWRod0N1NDBMNUlzMmhWM3NJZlhLQlpicDpKMEYxS0VOZWVFcWZ4TzBCMldiV2RYclVpNGhmanZSVEpjUk5UcGNzc0Q5NkZUWTZZNQ==";
+
+            var data = "grant_type=client_credentials";
+
+            using (var streamWriter = new StreamWriter(httpRequest.GetRequestStream()))
+            {
+                streamWriter.Write(data);
+            }
+
+            var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+            string result;
+            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            {
+                result = streamReader.ReadToEnd();
+            }
+
+            TokenReturn oToken=JsonConvert.DeserializeObject<TokenReturn>(result);
+            bearerToken=oToken.access_token;
+        }
+
+
     }
 }
