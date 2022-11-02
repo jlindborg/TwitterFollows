@@ -14,7 +14,7 @@ namespace TwitterFollows
 
         List<UserInfo> Following = new List<UserInfo>();
         List<UserInfo> Followers = new List<UserInfo>();
-        string bearerToken= "AAAAAAAAAAAAAAAAAAAAACbdigEAAAAAYMD0WniWyL%2Fv2y5b2dcMsCF%2F%2FH0%3DG11kQLVQxt3u1E1wSeZtlMacDw5c2EQOL56SkqqcsD4KXG1vOO";
+        string bearerToken= "YOUR BEARER TOKEN HERE";
 
         #endregion
 
