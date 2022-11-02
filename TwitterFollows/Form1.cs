@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Net;
 using Newtonsoft.Json;
+using System.Configuration;
 
 
 namespace TwitterFollows
@@ -14,7 +15,7 @@ namespace TwitterFollows
 
         List<UserInfo> Following = new List<UserInfo>();
         List<UserInfo> Followers = new List<UserInfo>();
-        string bearerToken= "YOUR BEARER TOKEN HERE";
+        string bearerToken;
 
         #endregion
 
@@ -27,6 +28,8 @@ namespace TwitterFollows
         private void Form1_Load(object sender, EventArgs e)
         {
             textBoxOutputFolder.Text = AppContext.BaseDirectory;
+            bearerToken=GetBearerToken();
+            textBoxBearerToken.Text=bearerToken;
         }
 
         private void buttonBrowse_Click(object sender, EventArgs e)
@@ -98,25 +101,45 @@ namespace TwitterFollows
             System.Diagnostics.Process.Start("explorer.exe", textBoxOutputFolder.Text);
         }
 
-        #endregion
-
-        #region Helper Functions
-
-        private void DumpToCsv(string strFileName, List<UserInfo> dataSet)
+        private void textBoxBearerToken_TextChanged(object sender, EventArgs e)
         {
-            string strOutput= "UserID, UserName, DisplayName" + Environment.NewLine;
-            foreach (var user in dataSet)
-            {
-                strOutput+=$"{user.id},{user.username},\"{user.name}\"{Environment.NewLine}";
-            }
-            string filePath=Path.Combine(textBoxOutputFolder.Text,strFileName);
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }  
-            File.WriteAllText(filePath,strOutput);
+            //save
+            SetBearerToken(textBoxBearerToken.Text);
         }
 
+        #endregion
+
+        #region Helpers
+        private void SetBearerToken(string newToken)
+        {
+            string key = "BearerToken";
+            bearerToken = newToken;
+            try
+            {
+                var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                var settings = configFile.AppSettings.Settings;
+                if (settings[key] == null)
+                {
+                    settings.Add(key, newToken);
+                }
+                else
+                {
+                    settings[key].Value = newToken;
+                }
+                configFile.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error saving configuration settings: " + ex);
+            }
+        }
+
+        private string GetBearerToken()
+        {
+            bearerToken = ConfigurationManager.AppSettings["BearerToken"];
+            return bearerToken;
+        }
         string GetIdFromUserName(string userName)
         {
             var url = "https://api.twitter.com/2/users/by/username/" + userName;
@@ -125,12 +148,12 @@ namespace TwitterFollows
 
             httpRequest.Headers["Authorization"] = "Bearer " + bearerToken;
 
-            string result="";
+            string result = "";
 
-            try 
-            { 
+            try
+            {
                 var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-            
+
                 using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                 {
                     result = streamReader.ReadToEnd();
@@ -169,18 +192,18 @@ namespace TwitterFollows
             {
                 url = url + "?pagination_token=" + nextPageId;
             }
-            
-            RetryCall:
+
+        RetryCall:
             var httpRequest = (HttpWebRequest)WebRequest.Create(url);
 
             httpRequest.Headers["Authorization"] = "Bearer " + bearerToken;
-            
-            string result="";
+
+            string result = "";
 
             try
             {
                 var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-            
+
                 using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                 {
                     result = streamReader.ReadToEnd();
@@ -190,18 +213,18 @@ namespace TwitterFollows
             {
                 if (ex.ToString().ToLower().Contains("(429) too many requests"))
                 {
-                    int iCount=0;
+                    int iCount = 0;
                     if (fetchingFollowers)
                     {
-                        iCount=Followers.Count;
+                        iCount = Followers.Count;
                     }
                     else
                     {
-                        iCount=Following.Count;
+                        iCount = Following.Count;
                     }
                     if (MessageBox.Show("Twitter reate limit reached. " +
-                        "You can wait 15 minutes and hit continue to get the next chunk of users or hit cancel to exit. Users found so far="+iCount,
-                        "Rate Limit Reached",MessageBoxButtons.RetryCancel)== DialogResult.Retry)
+                        "You can wait 15 minutes and hit continue to get the next chunk of users or hit cancel to exit. Users found so far=" + iCount,
+                        "Rate Limit Reached", MessageBoxButtons.RetryCancel) == DialogResult.Retry)
                     {
                         goto RetryCall;
                     }
@@ -210,8 +233,8 @@ namespace TwitterFollows
                         return "";
                     }
                 }
-                else 
-                { 
+                else
+                {
                     MessageBox.Show(ex.ToString());
                     return "";
                 }
@@ -219,7 +242,7 @@ namespace TwitterFollows
 
             List<UserInfo> userInfos = new List<UserInfo>();
             var output = JsonConvert.DeserializeObject<Root>(result);
-            if (output==null || output.data==null) return "";
+            if (output == null || output.data == null) return "";
             foreach (UserInfo userInfo in output.data)
             {
                 if (fetchingFollowers)
@@ -235,7 +258,22 @@ namespace TwitterFollows
             return output.meta.next_token;
         }
 
-       #endregion
+        private void DumpToCsv(string strFileName, List<UserInfo> dataSet)
+        {
+            string strOutput= "UserID, UserName, DisplayName" + Environment.NewLine;
+            foreach (var user in dataSet)
+            {
+                strOutput+=$"{user.id},{user.username},\"{user.name}\"{Environment.NewLine}";
+            }
+            string filePath=Path.Combine(textBoxOutputFolder.Text,strFileName);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }  
+            File.WriteAllText(filePath,strOutput);
+        }
 
+        #endregion
+       
     }
 }
