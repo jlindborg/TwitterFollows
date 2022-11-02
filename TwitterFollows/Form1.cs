@@ -14,7 +14,7 @@ namespace TwitterFollows
 
         List<UserInfo> Following = new List<UserInfo>();
         List<UserInfo> Followers = new List<UserInfo>();
-        string bearerToken= "AAAAAAAAAAAAAAAAAAAAACbdigEAAAAAYMD0WniWyL%2Fv2y5b2dcMsCF%2F%2FH0%3DG11kQLVQxt3u1E1wSeZtlMacDw5c2EQOL56SkqqcsD4KXG1vOO";
+        string bearerToken= "USE YOUR TOKEN HERE";
 
         #endregion
 
@@ -24,6 +24,11 @@ namespace TwitterFollows
             InitializeComponent();
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            textBoxOutputFolder.Text = AppContext.BaseDirectory;
+        }
+
         private void buttonBrowse_Click(object sender, EventArgs e)
         {
             var result = folderBrowserDialog1.ShowDialog();
@@ -31,11 +36,6 @@ namespace TwitterFollows
             {
                 textBoxOutputFolder.Text = folderBrowserDialog1.SelectedPath;
             }
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            textBoxOutputFolder.Text = AppContext.BaseDirectory;
         }
 
         private void buttonFetchFriends_Click(object sender, EventArgs e)
@@ -125,12 +125,20 @@ namespace TwitterFollows
 
             httpRequest.Headers["Authorization"] = "Bearer " + bearerToken;
 
+            string result="";
 
-            var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-            string result;
-            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            try { 
+                var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+            
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    result = streamReader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
             {
-                result = streamReader.ReadToEnd();
+                MessageBox.Show(ex.ToString());
+                return "";
             }
 
             var user = JsonConvert.DeserializeObject<SingleUserFetch>(result);
@@ -156,12 +164,20 @@ namespace TwitterFollows
 
             httpRequest.Headers["Authorization"] = "Bearer " + bearerToken;
 
+            string result="";
 
-            var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-            string result;
-            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            try { 
+                var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+            
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    result = streamReader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
             {
-                result = streamReader.ReadToEnd();
+                MessageBox.Show(ex.ToString());
+                return "";
             }
 
             List<UserInfo> userInfos = new List<UserInfo>();
@@ -187,13 +203,22 @@ namespace TwitterFollows
             var httpRequest = (HttpWebRequest)WebRequest.Create(url);
 
             httpRequest.Headers["Authorization"] = "Bearer " + bearerToken;
+            
+            string result="";
 
-
-            var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-            string result;
-            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            try
             {
-                result = streamReader.ReadToEnd();
+                var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+            
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    result = streamReader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+                return "";
             }
 
             List<UserInfo> userInfos = new List<UserInfo>();

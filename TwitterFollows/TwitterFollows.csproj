@@ -58,7 +58,6 @@
     <Compile Include="Model\Meta.cs" />
     <Compile Include="Model\Root.cs" />
     <Compile Include="Model\SingleUserFetch.cs" />
-    <Compile Include="Model\TokenReturn.cs" />
     <Compile Include="Model\UserInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
