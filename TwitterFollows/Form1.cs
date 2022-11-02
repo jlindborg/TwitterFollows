@@ -54,11 +54,11 @@ namespace TwitterFollows
                 return;
             }
 
-            string strNextPageToken = GetNextPageOfFriends(id, "");
+            string strNextPageToken = GetNextPageOfUsers(id, "",false);
 
             while (!string.IsNullOrEmpty(strNextPageToken))
             {
-                strNextPageToken = GetNextPageOfFriends(id, strNextPageToken);
+                strNextPageToken = GetNextPageOfUsers(id, strNextPageToken,false);
             }
 
             if (Following.Count > 0)
@@ -84,11 +84,11 @@ namespace TwitterFollows
                 return;
             }
 
-            string strNextPageToken = GetNextPageOfFollowers(id, "");
+            string strNextPageToken = GetNextPageOfUsers(id, "",true);
 
             while (!string.IsNullOrEmpty(strNextPageToken))
             {
-                strNextPageToken = GetNextPageOfFollowers(id, strNextPageToken);
+                strNextPageToken = GetNextPageOfUsers(id, strNextPageToken,true);
             }
             if (Followers.Count > 0)
             {
@@ -127,7 +127,8 @@ namespace TwitterFollows
 
             string result="";
 
-            try { 
+            try 
+            { 
                 var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
             
                 using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
@@ -151,55 +152,25 @@ namespace TwitterFollows
             return user.data.id;
         }
 
-        string GetNextPageOfFriends(string userId, string nextPageId)
+
+        string GetNextPageOfUsers(string userId, string nextPageId, bool fetchingFollowers)
         {
-            var url = "https://api.twitter.com/2/users/" + userId + "/following";
-
-            if (!string.IsNullOrEmpty(nextPageId))
+            string url;
+            if (fetchingFollowers)
             {
-                url=url+ "?pagination_token=" + nextPageId;
+                url = "https://api.twitter.com/2/users/" + userId + "/followers";
             }
-
-            var httpRequest = (HttpWebRequest)WebRequest.Create(url);
-
-            httpRequest.Headers["Authorization"] = "Bearer " + bearerToken;
-
-            string result="";
-
-            try { 
-                var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-            
-                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                {
-                    result = streamReader.ReadToEnd();
-                }
-            }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show(ex.ToString());
-                return "";
+                url = "https://api.twitter.com/2/users/" + userId + "/following";
             }
-
-            List<UserInfo> userInfos = new List<UserInfo>();
-            var output = JsonConvert.DeserializeObject<Root>(result);
-            if (output==null || output.data==null) return "";
-            foreach (UserInfo userInfo in output.data)
-            {
-                Following.Add(userInfo);
-            }
-
-            return output.meta.next_token;
-        }
-
-        string GetNextPageOfFollowers(string userId, string nextPageId)
-        {
-            var url = "https://api.twitter.com/2/users/" + userId + "/followers";
 
             if (!string.IsNullOrEmpty(nextPageId))
             {
                 url = url + "?pagination_token=" + nextPageId;
             }
-
+            
+            RetryCall:
             var httpRequest = (HttpWebRequest)WebRequest.Create(url);
 
             httpRequest.Headers["Authorization"] = "Bearer " + bearerToken;
@@ -217,8 +188,33 @@ namespace TwitterFollows
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
-                return "";
+                if (ex.ToString().ToLower().Contains("(429) too many requests"))
+                {
+                    int iCount=0;
+                    if (fetchingFollowers)
+                    {
+                        iCount=Followers.Count;
+                    }
+                    else
+                    {
+                        iCount=Following.Count;
+                    }
+                    if (MessageBox.Show("Twitter reate limit reached. " +
+                        "You can wait 15 minutes and hit continue to get the next chunk of users or hit cancel to exit. Users found so far="+iCount,
+                        "Rate Limit Reached",MessageBoxButtons.RetryCancel)== DialogResult.Retry)
+                    {
+                        goto RetryCall;
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                }
+                else 
+                { 
+                    MessageBox.Show(ex.ToString());
+                    return "";
+                }
             }
 
             List<UserInfo> userInfos = new List<UserInfo>();
@@ -226,7 +222,14 @@ namespace TwitterFollows
             if (output==null || output.data==null) return "";
             foreach (UserInfo userInfo in output.data)
             {
-                Followers.Add(userInfo);
+                if (fetchingFollowers)
+                {
+                    Followers.Add(userInfo);
+                }
+                else
+                {
+                    Following.Add(userInfo);
+                }
             }
 
             return output.meta.next_token;
