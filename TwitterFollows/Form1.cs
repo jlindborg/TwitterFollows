@@ -10,21 +10,57 @@ namespace TwitterFollows
 {
     public partial class Form1 : Form
     {
+        #region Fields and Properties 
+
         List<UserInfo> Following = new List<UserInfo>();
         List<UserInfo> Followers = new List<UserInfo>();
-        string bearerToken;
+        string bearerToken= "AAAAAAAAAAAAAAAAAAAAACbdigEAAAAAYMD0WniWyL%2Fv2y5b2dcMsCF%2F%2FH0%3DG11kQLVQxt3u1E1wSeZtlMacDw5c2EQOL56SkqqcsD4KXG1vOO";
 
+        #endregion
+
+        #region Form Events
         public Form1()
         {
             InitializeComponent();
-            GetBearerToken();
+        }
+
+        private void buttonBrowse_Click(object sender, EventArgs e)
+        {
+            var result = folderBrowserDialog1.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                textBoxOutputFolder.Text = folderBrowserDialog1.SelectedPath;
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            textBoxOutputFolder.Text = AppContext.BaseDirectory;
         }
 
         private void buttonFetchFriends_Click(object sender, EventArgs e)
         {
             Following=new List<UserInfo>();
-            
-            FetchFriends();
+
+            if (string.IsNullOrEmpty(textBoxUserName.Text))
+            {
+                MessageBox.Show("You must enter a user name to search for");
+                return;
+            }
+            string id = GetIdFromUserName(textBoxUserName.Text);
+            if (string.IsNullOrEmpty(id))
+            {
+                MessageBox.Show("No user with that Id found");
+                return;
+            }
+
+            string strNextPageToken = GetNextPageOfFriends(id, "");
+
+            while (!string.IsNullOrEmpty(strNextPageToken))
+            {
+                strNextPageToken = GetNextPageOfFriends(id, strNextPageToken);
+            }
+
             if (Following.Count > 0)
             {
                 DumpToCsv(textBoxUserName.Text + "_Following.csv",Following);
@@ -32,6 +68,39 @@ namespace TwitterFollows
             MessageBox.Show(Following.Count.ToString() + " users are being followed by this account");
             System.Diagnostics.Process.Start("explorer.exe", textBoxOutputFolder.Text);
         }
+
+        private void buttonFetchFollowers_Click(object sender, EventArgs e)
+        {
+            Followers = new List<UserInfo>();
+            if (string.IsNullOrEmpty(textBoxUserName.Text))
+            {
+                MessageBox.Show("You must enter a user name to search for");
+                return;
+            }
+            string id = GetIdFromUserName(textBoxUserName.Text);
+            if (string.IsNullOrEmpty(id))
+            {
+                MessageBox.Show("No user with that Id found");
+                return;
+            }
+
+            string strNextPageToken = GetNextPageOfFollowers(id, "");
+
+            while (!string.IsNullOrEmpty(strNextPageToken))
+            {
+                strNextPageToken = GetNextPageOfFollowers(id, strNextPageToken);
+            }
+            if (Followers.Count > 0)
+            {
+                DumpToCsv(textBoxUserName.Text + "_Followers.csv", Followers);
+            }
+            MessageBox.Show(Followers.Count.ToString() + " followers of this account found");
+            System.Diagnostics.Process.Start("explorer.exe", textBoxOutputFolder.Text);
+        }
+
+        #endregion
+
+        #region Helper Functions
 
         private void DumpToCsv(string strFileName, List<UserInfo> dataSet)
         {
@@ -46,30 +115,6 @@ namespace TwitterFollows
                 File.Delete(filePath);
             }  
             File.WriteAllText(filePath,strOutput);
-
-        }
-
-        private void FetchFriends()
-        {
-            if (string.IsNullOrEmpty(textBoxUserName.Text))
-            {
-                MessageBox.Show("You must enter a user name to search for");
-                return;
-            }
-            string id= GetIdFromUserName(textBoxUserName.Text);
-            if (string.IsNullOrEmpty(id))
-            {
-                MessageBox.Show("No user with that Id found");
-                return;
-            }
-
-            string strNextPageToken=GetNextPageOfFriends(id,"");
-
-            while (!string.IsNullOrEmpty(strNextPageToken))
-            {
-                strNextPageToken = GetNextPageOfFriends(id, strNextPageToken);
-            }
-            
         }
 
         string GetIdFromUserName(string userName)
@@ -162,79 +207,7 @@ namespace TwitterFollows
             return output.meta.next_token;
         }
 
-        private void buttonBrowse_Click(object sender, EventArgs e)
-        {
-            var result= folderBrowserDialog1.ShowDialog();
-            if (result== DialogResult.OK)
-            {
-                textBoxOutputFolder.Text=folderBrowserDialog1.SelectedPath;
-            }
-
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            textBoxOutputFolder.Text= AppContext.BaseDirectory;
-
-
-        }
-
-        private void buttonFetchFollowers_Click(object sender, EventArgs e)
-        {
-            Followers = new List<UserInfo>();
-            if (string.IsNullOrEmpty(textBoxUserName.Text))
-            {
-                MessageBox.Show("You must enter a user name to search for");
-                return;
-            }
-            string id = GetIdFromUserName(textBoxUserName.Text);
-            if (string.IsNullOrEmpty(id))
-            {
-                MessageBox.Show("No user with that Id found");
-                return;
-            }
-
-            string strNextPageToken = GetNextPageOfFollowers(id, "");
-
-            while (!string.IsNullOrEmpty(strNextPageToken))
-            {
-                strNextPageToken = GetNextPageOfFollowers(id, strNextPageToken);
-            }
-            if (Followers.Count > 0) { 
-                DumpToCsv(textBoxUserName.Text + "_Followers.csv",Followers);
-            }
-            MessageBox.Show(Followers.Count.ToString() + " followers of this account found");
-            System.Diagnostics.Process.Start("explorer.exe", textBoxOutputFolder.Text);
-        }
-
-        private void GetBearerToken()
-        {
-            var url = "https://api.twitter.com/oauth2/token";
-
-            var httpRequest = (HttpWebRequest)WebRequest.Create(url);
-            httpRequest.Method = "POST";
-
-            httpRequest.ContentType = "application/x-www-form-urlencoded";
-            httpRequest.Headers["Authorization"] = "Basic eWRod0N1NDBMNUlzMmhWM3NJZlhLQlpicDpKMEYxS0VOZWVFcWZ4TzBCMldiV2RYclVpNGhmanZSVEpjUk5UcGNzc0Q5NkZUWTZZNQ==";
-
-            var data = "grant_type=client_credentials";
-
-            using (var streamWriter = new StreamWriter(httpRequest.GetRequestStream()))
-            {
-                streamWriter.Write(data);
-            }
-
-            var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-            string result;
-            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-            {
-                result = streamReader.ReadToEnd();
-            }
-
-            TokenReturn oToken=JsonConvert.DeserializeObject<TokenReturn>(result);
-            bearerToken=oToken.access_token;
-        }
-
+       #endregion
 
     }
 }
