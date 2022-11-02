@@ -14,7 +14,7 @@ namespace TwitterFollows
 
         List<UserInfo> Following = new List<UserInfo>();
         List<UserInfo> Followers = new List<UserInfo>();
-        string bearerToken= "USE YOUR TOKEN HERE";
+        string bearerToken= "AAAAAAAAAAAAAAAAAAAAACbdigEAAAAAYMD0WniWyL%2Fv2y5b2dcMsCF%2F%2FH0%3DG11kQLVQxt3u1E1wSeZtlMacDw5c2EQOL56SkqqcsD4KXG1vOO";
 
         #endregion
 
@@ -104,10 +104,10 @@ namespace TwitterFollows
 
         private void DumpToCsv(string strFileName, List<UserInfo> dataSet)
         {
-            string strOutput="UserID, DisplayName, UserName"+Environment.NewLine;
+            string strOutput= "UserID, UserName, DisplayName" + Environment.NewLine;
             foreach (var user in dataSet)
             {
-                strOutput+=user.id+","+user.name+","+user.username+Environment.NewLine;
+                strOutput+=$"{user.id},{user.username},\"{user.name}\"{Environment.NewLine}";
             }
             string filePath=Path.Combine(textBoxOutputFolder.Text,strFileName);
             if (File.Exists(filePath))
