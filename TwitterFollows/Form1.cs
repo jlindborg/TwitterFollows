@@ -164,13 +164,19 @@ namespace TwitterFollows
 
         private void buttonBrowse_Click(object sender, EventArgs e)
         {
+            var result= folderBrowserDialog1.ShowDialog();
+            if (result== DialogResult.OK)
+            {
+                textBoxOutputFolder.Text=folderBrowserDialog1.SelectedPath;
+            }
 
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            textBoxOutputFolder.Text="d:\\testing";
-            
+            textBoxOutputFolder.Text= AppContext.BaseDirectory;
+
+
         }
 
         private void buttonFetchFollowers_Click(object sender, EventArgs e)
